@@ -13,13 +13,13 @@ def pose_to_matrix(position, quat_xyzw):
     T[:3, 3] = position
     return T
 
-def is_rigid_transform(T, tol=1e-3):
+def is_rigid_transform(T, tol=1e-6):
     """
     检查一个 4x4 矩阵是否是刚性变换矩阵。
     
     参数:
         T: 4x4 numpy 数组
-        tol: 容差（默认 1e-3）
+        tol: 容差（默认 1e-6）
 
     返回:
         (bool, str): 是否为刚性矩阵，以及诊断信息
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="逐帧拟合球体并评估误差")
     parser.add_argument("--base_dir", type=str, default="./0411", help="点云文件夹路径")
     parser.add_argument("--robot_file", type=str, default="aubo_record_2025-04-11_22-15-34.txt", help="机械臂位姿文件")
-    parser.add_argument("--calib_file", type=str, default="cal.txt", help="手眼标定文件")
+    parser.add_argument("--calib_file", type=str, default="cal3.txt", help="手眼标定文件")
     args = parser.parse_args()
 
     main(args.base_dir, 
