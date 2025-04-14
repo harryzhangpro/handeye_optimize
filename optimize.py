@@ -98,6 +98,40 @@ class HandeyeOptimizer(nn.Module):
         Rm = torch.eye(3, device=device) + torch.sin(theta) * K + (1 - torch.cos(theta)) * K @ K
         return Rm
 
+def is_rigid_transform(T, tol=1e-3):
+    """
+    检查一个 4x4 矩阵是否是刚性变换矩阵。
+    
+    参数:
+        T: 4x4 numpy 数组
+        tol: 容差（默认 1e-3）
+
+    返回:
+        (bool, str): 是否为刚性矩阵，以及诊断信息
+    """
+    if T.shape != (4, 4):
+        return False, "不是 4x4 矩阵"
+
+    R = T[:3, :3]
+    t = T[:3, 3]
+
+    # 正交性检查
+    should_be_identity = R.T @ R
+    identity = np.eye(3)
+    if not np.allclose(should_be_identity, identity, atol=tol):
+        return False, f"⚠️ 旋转矩阵不是正交的\nR^T R =\n{should_be_identity}"
+
+    # 行列式为 +1 检查
+    det = np.linalg.det(R)
+    if not np.isclose(det, 1.0, atol=tol):
+        return False, f"⚠️ 旋转矩阵行列式不为 1（det = {det:.6f}）"
+
+    # 第四行是否为 [0, 0, 0, 1]
+    if not np.allclose(T[3], np.array([0, 0, 0, 1]), atol=tol):
+        return False, f"最后一行不是 [0, 0, 0, 1]，而是 {T[3]}"
+
+    return True, "是合法的刚性变换矩阵 ✅"
+
 def main(robot_file=None, calib_file=None, base_dir=None, downsample=1.0, Epoch=100):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -110,11 +144,15 @@ def main(robot_file=None, calib_file=None, base_dir=None, downsample=1.0, Epoch=
         import re
         matrix_str = re.search(r"\[\[.*?\]\]", content, re.DOTALL).group()
         end_T_cam_ori = np.array(eval(matrix_str))
+        is_rigid, message = is_rigid_transform(end_T_cam_ori)
+        print("检查结果:", message)
+        if is_rigid == False:
+            print("矩阵校验失败，退出。")
+            return
 
     model = HandeyeOptimizer(end_T_cam_ori).to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.01)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20, verbose=True)
-
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=20)
     print("初始 handeye 平移向量 (m):", model.trans.detach().cpu().numpy())
     print("初始 handeye 旋转向量 (axis-angle):", model.rotvec.detach().cpu().numpy())
     print("\n开始优化...\n")
@@ -176,8 +214,8 @@ if __name__ == "__main__":
     parser.add_argument("--downsample", type=float, default=1.0, help="体素降采样大小，单位为毫米，默认 1.0")
     parser.add_argument("--base_dir", type=str, default="./0411", help="点云文件夹路径")
     parser.add_argument("--robot_file", type=str, default="aubo_record_2025-04-11_22-15-34.txt", help="机械臂位姿文件")
-    parser.add_argument("--calib_file", type=str, default="cal.txt", help="手眼标定文件")
-    parser.add_argument("--Epoch", type=int, default=50, help="迭代次数")
+    parser.add_argument("--calib_file", type=str, default="cal2.txt", help="手眼标定文件")
+    parser.add_argument("--Epoch", type=int, default=200, help="迭代次数")
     args = parser.parse_args()
 
     main(robot_file=args.robot_file,

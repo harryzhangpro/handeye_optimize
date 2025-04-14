@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation as R
 # ================== 配置路径 ==================
 base_dir = "./0411"  # 点云文件夹
 record_file = "aubo_record_2025-04-11_22-15-34.txt"
-calib_file = "cal5.txt"
+calib_file = "cal2.txt"
 
 # ================== 加载手眼标定矩阵 ==================
 print("加载手眼标定矩阵...")

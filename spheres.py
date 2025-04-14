@@ -13,6 +13,40 @@ def pose_to_matrix(position, quat_xyzw):
     T[:3, 3] = position
     return T
 
+def is_rigid_transform(T, tol=1e-3):
+    """
+    检查一个 4x4 矩阵是否是刚性变换矩阵。
+    
+    参数:
+        T: 4x4 numpy 数组
+        tol: 容差（默认 1e-3）
+
+    返回:
+        (bool, str): 是否为刚性矩阵，以及诊断信息
+    """
+    if T.shape != (4, 4):
+        return False, "不是 4x4 矩阵"
+
+    R = T[:3, :3]
+    t = T[:3, 3]
+
+    # 正交性检查
+    should_be_identity = R.T @ R
+    identity = np.eye(3)
+    if not np.allclose(should_be_identity, identity, atol=tol):
+        return False, f"⚠️ 旋转矩阵不是正交的\nR^T R =\n{should_be_identity}"
+
+    # 行列式为 +1 检查
+    det = np.linalg.det(R)
+    if not np.isclose(det, 1.0, atol=tol):
+        return False, f"⚠️ 旋转矩阵行列式不为 1（det = {det:.6f}）"
+
+    # 第四行是否为 [0, 0, 0, 1]
+    if not np.allclose(T[3], np.array([0, 0, 0, 1]), atol=tol):
+        return False, f"最后一行不是 [0, 0, 0, 1]，而是 {T[3]}"
+
+    return True, "是合法的刚性变换矩阵 ✅"
+
 def fit_sphere(points):
     def residuals(params, xyz):
         cx, cy, cz, r = params
@@ -39,7 +73,12 @@ def main(base_dir=None, robot_file=None, calib_file=None):
     # === 加载标定矩阵 ===
     with open(calib_file, "r") as f:
         content = f.read()
-        end_T_cam = eval(content.split('=')[1].strip())
+        end_T_cam = np.array(eval(content.split('=')[1].strip()))
+        is_rigid, message = is_rigid_transform(end_T_cam)
+        print("检查结果:", message)
+        if is_rigid == False:
+            print("矩阵校验失败，退出。")
+            return
 
     # === 加载机械臂位姿 ===
     pose_list = []
