@@ -8,7 +8,6 @@ import argparse
 import matplotlib.pyplot as plt
 from scipy.spatial.transform import Rotation as R
 
-# === 工具函数 ===
 def load_pose_list(txt_path):
     pose_list = []
     with open(txt_path, "r") as f:
@@ -57,7 +56,6 @@ def fit_sphere_least_squares(points):
     center_refined = x_refined[:3].squeeze()
     return center_refined
 
-# === 模型定义 ===
 class HandeyeOptimizer(nn.Module):
     def __init__(self, init_matrix):
         super().__init__()
@@ -100,7 +98,6 @@ class HandeyeOptimizer(nn.Module):
         Rm = torch.eye(3, device=device) + torch.sin(theta) * K + (1 - torch.cos(theta)) * K @ K
         return Rm
 
-# === 主程序 ===
 def main(robot_file=None, calib_file=None, base_dir=None, downsample=1.0, Epoch=100):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")

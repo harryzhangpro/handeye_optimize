@@ -34,21 +34,16 @@ def print_fitting_report(residuals):
     print("RMSE（均方根）: {:.3f} mm".format(np.sqrt(np.mean(abs_residuals**2))))
     print("--------------------------------")
 
-def main():
-    parser = argparse.ArgumentParser(description="逐帧拟合球体并评估误差")
-    parser.add_argument("--base_dir", type=str, default="./0411", help="点云文件夹路径")
-    parser.add_argument("--record_file", type=str, default="aubo_record_2025-04-11_22-15-34.txt", help="机械臂位姿文件")
-    parser.add_argument("--calib_file", type=str, default="cal4.txt", help="手眼标定文件")
-    args = parser.parse_args()
+def main(base_dir=None, robot_file=None, calib_file=None):
 
     # === 加载标定矩阵 ===
-    with open(args.calib_file, "r") as f:
+    with open(calib_file, "r") as f:
         content = f.read()
         end_T_cam = eval(content.split('=')[1].strip())
 
     # === 加载机械臂位姿 ===
     pose_list = []
-    with open(args.record_file, "r") as f:
+    with open(robot_file, "r") as f:
         lines = f.readlines()
         for i in range(len(lines)):
             if "Position" in lines[i]:
@@ -57,7 +52,7 @@ def main():
                 pose_list.append((pos, ori))
 
     # === 加载点云文件 ===
-    pcd_files = sorted(glob.glob(os.path.join(args.base_dir, "point_cloud_*.pcd")))
+    pcd_files = sorted(glob.glob(os.path.join(base_dir, "point_cloud_*.pcd")))
     visual_geoms = []
     centers_mm = []
 
@@ -142,4 +137,12 @@ def main():
     o3d.visualization.draw_geometries(visual_geoms)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="逐帧拟合球体并评估误差")
+    parser.add_argument("--base_dir", type=str, default="./0411", help="点云文件夹路径")
+    parser.add_argument("--robot_file", type=str, default="aubo_record_2025-04-11_22-15-34.txt", help="机械臂位姿文件")
+    parser.add_argument("--calib_file", type=str, default="cal.txt", help="手眼标定文件")
+    args = parser.parse_args()
+
+    main(args.base_dir, 
+         args.robot_file,
+         args.calib_file)
