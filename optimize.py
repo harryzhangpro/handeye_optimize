@@ -98,7 +98,7 @@ class HandeyeOptimizer(nn.Module):
         Rm = torch.eye(3, device=device) + torch.sin(theta) * K + (1 - torch.cos(theta)) * K @ K
         return Rm
 
-def is_rigid_transform(T, tol=1e-3):
+def is_rigid_transform(T, tol=1e-6):
     """
     检查一个 4x4 矩阵是否是刚性变换矩阵。
     
