@@ -173,11 +173,11 @@ def main(robot_file=None, calib_file=None, base_dir=None, downsample=1.0, Epoch=
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--downsample", type=float, default=1.0, help="体素降采样大小，单位为米，默认 0.02")
+    parser.add_argument("--downsample", type=float, default=1.0, help="体素降采样大小，单位为毫米，默认 1.0")
     parser.add_argument("--base_dir", type=str, default="./0411", help="点云文件夹路径")
     parser.add_argument("--robot_file", type=str, default="aubo_record_2025-04-11_22-15-34.txt", help="机械臂位姿文件")
     parser.add_argument("--calib_file", type=str, default="cal.txt", help="手眼标定文件")
-    parser.add_argument("--Epoch", type=int, default=500, help="迭代次数")
+    parser.add_argument("--Epoch", type=int, default=50, help="迭代次数")
     args = parser.parse_args()
 
     main(robot_file=args.robot_file,
