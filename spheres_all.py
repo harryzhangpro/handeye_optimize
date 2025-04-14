@@ -38,7 +38,7 @@ def main():
     parser = argparse.ArgumentParser(description="逐帧拟合球体并评估误差")
     parser.add_argument("--base_dir", type=str, default="./0411", help="点云文件夹路径")
     parser.add_argument("--record_file", type=str, default="aubo_record_2025-04-11_22-15-34.txt", help="机械臂位姿文件")
-    parser.add_argument("--calib_file", type=str, default="cal2.txt", help="手眼标定文件")
+    parser.add_argument("--calib_file", type=str, default="cal4.txt", help="手眼标定文件")
     args = parser.parse_args()
 
     # === 加载标定矩阵 ===
